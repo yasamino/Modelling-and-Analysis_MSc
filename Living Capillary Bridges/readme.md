@@ -18,9 +18,9 @@ The goal of this work is to **model, simulate, and analyze the behavior of livin
 
 ## Folder Structure
 
-├── data/ # Data files
-├── scripts/ # Python scripts
-├── src/ # Source code
-├── results/ # Figures and outputs
-├── videos/ # Simulation videos
+├── data/ # Data files\\
+├── scripts/ # Python scripts\\
+├── src/ # Source code\\
+├── results/ # Figures and outputs\\
+├── videos/ # Simulation videos\\
 └── README.md
