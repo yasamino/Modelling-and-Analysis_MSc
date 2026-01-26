@@ -360,8 +360,6 @@ def Animate_vector_field_elongation_vector(view = 'XY', size_z = 28, frame_rate 
     end = 0
     size=100
 
-
-
     def visualisation_animation(f,th,frame_number , Filename , size , ax , view = 'XY' , z = 1.9):
         X_COMs = [] # Position vector components - Cell COM
         Y_COMs = []
@@ -372,9 +370,12 @@ def Animate_vector_field_elongation_vector(view = 'XY', size_z = 28, frame_rate 
 
 
         m = np.vstack(th.cellInd)
+        s1 = np.where(m < 0)[0]
+        s2 = np.where(m >= 0 )[0]
         c = [ f[i][:180] for i in range(len(m)) ]
         
-        for index , cell in enumerate(c): # Loop over all cells
+        soft = [ f[i][:180] for i in s1 ]
+        for cell in soft:
             hull = ConvexHull(cell[:,0:2]) # Finding the boundary points
             Area = hull.volume
             p = cell[hull.vertices,0:2]
@@ -412,9 +413,55 @@ def Animate_vector_field_elongation_vector(view = 'XY', size_z = 28, frame_rate 
             # Plotting the elongation vector field
             patches = []
             patches.append(Polygon(p, closed=True))
-            p = PatchCollection(patches,alpha=0.2)
-            p.set_color(cpick.to_rgba(Magnitude_of_elongation))
+            p = PatchCollection(patches,alpha=0.2, edgecolor='blue')
+            p.set_color("blue")
+            # p.set_color(cpick.to_rgba(Magnitude_of_elongation))
             ax.add_collection(p)
+
+        hard = [ f[i][:180] for i in s2 ]
+        for cell in hard:
+            hull = ConvexHull(cell[:,0:2]) # Finding the boundary points
+            Area = hull.volume
+            p = cell[hull.vertices,0:2]
+
+            COM = np.mean(p, axis=0)
+            X_COMs.append(COM[0])
+            Y_COMs.append(COM[1])
+            centered_p = p - COM
+
+            # calculations based on paper by Comelles et.al: https://doi.org/10.7554/eLife.57730
+            ''' Exx = D_alpha,  Eyy = -D_alpha,  Exy = Eyx = B_alpha '''
+            '''D_alpha = 1/A * sum( Cos(2theta) dA )'''
+            '''B_alpha = 1/A * sum( Sin(2theta) dA )'''
+            D_alpha = np.float64(0)
+            B_alpha = np.float64(0)
+            Theta = np.arctan2(centered_p[:,1], centered_p[:,0]) # angle of each point with respect to COM
+            for i in range(len(Theta)):
+               d_A = 0.5 * np.abs(centered_p[i-1][0] * centered_p[i][1] - centered_p[i][0] * centered_p[i-1][1])
+               D_alpha += np.cos(2*Theta[i]) * d_A
+               B_alpha += np.sin(2*Theta[i]) * d_A
+            D_alpha = D_alpha/Area
+            B_alpha = B_alpha/Area
+
+            Magnitude_of_elongation = np.linalg.norm([[D_alpha, B_alpha], [B_alpha, -D_alpha]]) 
+            Elongation_mag_1.append(Magnitude_of_elongation)
+            Mag_of_elongation = np.sqrt(D_alpha**2 + B_alpha**2)
+            Elongation_mag_2.append(Mag_of_elongation)
+            Elongation_angle = 0.5 * np.arcsin(B_alpha/Magnitude_of_elongation) # angle of elongation vector with respect to x axis
+            Elong_angle = np.arctan2(B_alpha, D_alpha)/2
+        
+            U.append(Mag_of_elongation * np.cos(Elong_angle))
+            V.append(Mag_of_elongation * np.sin(Elong_angle))
+
+            # print("Cell index: {}, Elongation magnitude: {}, Elong ang: {}".format(index, Mag_of_elongation, Elong_angle))
+            # Plotting the elongation vector field
+            patches = []
+            patches.append(Polygon(p, closed=True))
+            p = PatchCollection(patches,alpha=0.2, edgecolor='red')
+            p.set_color("red")
+            # p.set_color(cpick.to_rgba(Magnitude_of_elongation))
+            ax.add_collection(p)
+
 
 
         print(max(Elongation_mag_1))
