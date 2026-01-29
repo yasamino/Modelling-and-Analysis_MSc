@@ -23,7 +23,6 @@ from scipy.optimize import curve_fit
 from scipy.spatial import Delaunay
 import alphashape # type: ignore
 import matplotlib.animation as animation
-#sys.path.append("C:\\Users\\lenovo\\Documents\\physics\\voronoi\\decfirst")
 import celldiv # type: ignore
 from scipy.fft import ifft2
 from scipy.fft import fft2
@@ -35,11 +34,7 @@ argv = sys.argv
 if argv[1]:
     Files = [argv[1]]
 
-
-# System units:
-# unit length found by using the calculate z function
 Unit_length = 1.53/2  # Radius_of_a_cell
-
 
 # mpl.use('pdf')
 # plt.rc('font', family='serif', serif='Times')
@@ -150,12 +145,12 @@ def Elongation( Plot_distribution = True , bin_n=50 ):
                         D_alpha = np.float64(0)
                         B_alpha = np.float64(0)
                         Theta = np.arctan2(centered_p[:,1], centered_p[:,0]) # angle of each point with respect to COM
-                        for i in range(len(Theta)):
+                        for i in range(len(centered_p[:,0])):
                             d_A = 0.5 * np.abs(centered_p[i-1][0] * centered_p[i][1] - centered_p[i][0] * centered_p[i-1][1])
                             D_alpha += np.cos(2*Theta[i]) * d_A
                             B_alpha += np.sin(2*Theta[i]) * d_A
-                            D_alpha = D_alpha/Area
-                            B_alpha = B_alpha/Area
+                        D_alpha = D_alpha/Area
+                        B_alpha = B_alpha/Area
                         Mag_of_elongation = np.sqrt(D_alpha**2 + B_alpha**2)
                         Elongation_of_soft_cells.append(Mag_of_elongation)
                     
@@ -173,34 +168,37 @@ def Elongation( Plot_distribution = True , bin_n=50 ):
                         D_alpha = np.float64(0)
                         B_alpha = np.float64(0)
                         Theta = np.arctan2(centered_p[:,1], centered_p[:,0]) # angle of each point with respect to COM
-                        for i in range(len(Theta)):
+                        for i in range(len(centered_p[:,0])):
                             d_A = 0.5 * np.abs(centered_p[i-1][0] * centered_p[i][1] - centered_p[i][0] * centered_p[i-1][1])
                             D_alpha += np.cos(2*Theta[i]) * d_A
                             B_alpha += np.sin(2*Theta[i]) * d_A
-                            D_alpha = D_alpha/Area
-                            B_alpha = B_alpha/Area
+                        D_alpha = D_alpha/Area
+                        B_alpha = B_alpha/Area
                         Mag_of_elongation = np.sqrt(D_alpha**2 + B_alpha**2)
                         Elongation_of_hard_cells.append(Mag_of_elongation)
                     
                     
                     if Plot_distribution:
                         plt.clf()
-                        x_max = 0.6
-                        x=np.linspace(min(Elongation_of_hard_cells), max(Elongation_of_hard_cells), bin_n+1)
-                        y=[0]*(bin_n+1)
-                        for i in Elongation_of_hard_cells:
-                            y[int((i-min(Elongation_of_hard_cells))/(max(Elongation_of_hard_cells)-min(Elongation_of_hard_cells))*bin_n)]+=1
-                        plt.scatter(x,np.array(y)/len(Elongation_of_hard_cells) *100 , label='Hard cells', color='r' )
-
-                        x= np.linspace(min(Elongation_of_soft_cells), max(Elongation_of_soft_cells), bin_n+1)
-                        y=[0]*(bin_n+1)
-                        for i in Elongation_of_soft_cells:
-                            y[int((i-min(Elongation_of_soft_cells))/(max(Elongation_of_soft_cells)-min(Elongation_of_soft_cells))*bin_n)]+=1
-                        plt.scatter(x,np.array(y)/len(Elongation_of_soft_cells) *100 , label='Soft cells', color='b' )
+                        plt.hist(Elongation_of_hard_cells, bins=bin_n, density=True, alpha=0.5, label='Hard cells', color='r' )
+                        plt.hist(Elongation_of_soft_cells, bins=bin_n, density=True, alpha=0.5, label='Soft cells', color='b' )
+                        # x_max = 0.6
+                        # print(max(Elongation_of_hard_cells))
+                        # x=np.linspace(min(Elongation_of_hard_cells), max(Elongation_of_hard_cells), bin_n+1)
+                        # y=[0]*(bin_n+1)
+                        # for i in Elongation_of_hard_cells:
+                        #     y[int((i-min(Elongation_of_hard_cells))/(max(Elongation_of_hard_cells)-min(Elongation_of_hard_cells))*bin_n)]+=1
+                        # plt.scatter(x,np.array(y)/len(Elongation_of_hard_cells) *100 , label='Hard cells', color='r' )
+                        # print(max(Elongation_of_soft_cells))
+                        # x= np.linspace(min(Elongation_of_soft_cells), max(Elongation_of_soft_cells), bin_n+1)
+                        # y=[0]*(bin_n+1)
+                        # for i in Elongation_of_soft_cells:
+                        #     y[int((i-min(Elongation_of_soft_cells))/(max(Elongation_of_soft_cells)-min(Elongation_of_soft_cells))*bin_n)]+=1
+                        # plt.scatter(x,np.array(y)/len(Elongation_of_soft_cells) *100 , label='Soft cells', color='b' )
 
                         plt.xlabel('$\\Upsilon$')
                         plt.ylabel('N (%)')
-                        plt.xlim(0,x_max)
+                        plt.xlim(0,0.6)
                         plt.savefig('Dist_elong_{}_{}.png'.format(filename[:-4], frame))
                     
             except celldiv.IncompleteTrajectoryError:
