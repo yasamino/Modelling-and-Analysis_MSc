@@ -63,80 +63,80 @@ file_number=1
 
 
 def Cell_shape_alignment(f ,th):
-    # Nearest neighbor distribution for soft, hard, and all cells
-    m = np.vstack(th.cellInd)
-    all_coords = np.vstack(f)
-    all_coords = np.vstack(all_coords)
-    all_com = []
-    for mi in range(int(len(all_coords)/180)):
-        all_com.append(np.mean(all_coords[mi*180:(mi+1)*180],axis=0))
-    all_com = np.array(all_com)[: , 0:2] #2D coordinates
-    del_tri = Delaunay(all_com)
-    q_array = []
-    area_array = []
-    for coords in all_com[del_tri.simplices]:
-        #shape tensor
-        a = coords[0]
-        b = coords[1]
-        c = coords[2]
+    for filename in Files:
+        with celldiv.TrajHandle(filename) as th:
+            frameCount = 0
+            f_count=0
+            try:
+                for i in range(int(th.maxFrames/nSkip)+1): # i for each frame written to file
+                    frameCount += 1
 
-        #check counter clockwise
-        cross_product = (b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0])
-        if cross_product < 0:
-            b , c = c , b
+                    if frameCount > args.num_frames:
+                        break
+                    
+                    f=th.ReadFrame(inc=nSkip ) # f is the list of all the cells in the frame
+                    f_count+= len(f)
+                    m = np.vstack(th.cellInd)
+                    f = [ f[i][:180] for i in range(len(m)) ]
 
-        s1 = [[ b[0]-a[0] , c[0]-a[0]  ]
-            ,[ b[1]-a[1] , c[1]-a[1]  ]]
-        s2 = np.linalg.inv([[1 , 1/2],
-                            [0 , np.sqrt(3)/2]])
-        
-        s = np.dot(s1 , s2)
-        s_tilda = 1/2 * np.array([[ s[0,0] - s[1,1] , s[0,1] + s[1,0] ] , [  s[0,1] + s[1,0] , s[1,1] - s[0,0] ]]) #symmetric traceless matrix
-        theta = np.arctan2(s[1,0] - s[0,1] , s[0,0] + s[1,1])
-        R_neg_theta = [ [ np.cos(theta) , np.sin(theta)] , [ -np.sin(theta) , np.cos(theta)] ]
-        mag_s_tilda = np.sqrt( np.power(s[0,0],2) + np.power(s[0,1],2) )
-        q = 1/mag_s_tilda * (np.arcsinh( mag_s_tilda / np.sqrt(np.linalg.det(s)) )) * np.dot(s_tilda , R_neg_theta)
-        q_array.append(q)
-        area = np.linalg.det(s)
-        # print(area)
-        area_array.append(area)
+                    if len(args.inds) > 0:
+                        pass
+                    
+                    # Nearest neighbor distribution for soft, hard, and all cells
+                    m = np.vstack(th.cellInd)
+                    all_coords = np.vstack(f)
+                    all_coords = np.vstack(all_coords)
+                    all_com = []
+                    for mi in range(int(len(all_coords)/180)):
+                        all_com.append(np.mean(all_coords[mi*180:(mi+1)*180],axis=0))
+                    all_com = np.array(all_com)[: , 0:2] #2D coordinates
+                    del_tri = Delaunay(all_com)
+                    q_array = []
+                    area_array = []
+                    for coords in all_com[del_tri.simplices]:
+                        #shape tensor
+                        a = coords[0]
+                        b = coords[1]
+                        c = coords[2]
 
-    # print(q_array)
-    q_area_sum = [ np.array(q_array[i])*area_array[i] for i in range(len(q_array)) ]
-    Q = np.sum(q_area_sum , axis =0) / np.sum(area_array) #check
-    # print(area_array)
-    mag_Q = np.sqrt( np.power( Q[0,0], 2) + np.power( Q[0,1], 2) )
-    Q_s_array = [ np.sqrt( np.power( q_array[i][0,0], 2) + np.power( q_array[i][0,1], 2) ) for i in range(len(q_array)) ]
-    qs_area_sum = [np.array(Q_s_array[i]) * area_array[i] for i in range(len(Q_s_array))] # Is it weighted average?
-    mag_Q_s = np.sum(qs_area_sum , axis =0) / np.sum(area_array) #check
-    Q_alignment = mag_Q/mag_Q_s
-    print( 'Q: '  , mag_Q )
-    print( 'Q_s: ', mag_Q_s)
-    print( 'Q_a: ', mag_Q/mag_Q_s)
-    return Q_alignment
+                        #check counter clockwise
+                        cross_product = (b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0])
+                        if cross_product < 0:
+                            b , c = c , b
+
+                        s1 = [[ b[0]-a[0] , c[0]-a[0]  ]
+                            ,[ b[1]-a[1] , c[1]-a[1]  ]]
+                        s2 = np.linalg.inv([[1 , 1/2],
+                                            [0 , np.sqrt(3)/2]])
+                        s = np.dot(s1 , s2)
+                        s_tilda = 1/2 * np.array([[ s[0,0] - s[1,1] , s[0,1] + s[1,0] ] , [  s[0,1] + s[1,0] , s[1,1] - s[0,0] ]]) #symmetric traceless matrix
+                        theta = np.arctan2(s[1,0] - s[0,1] , s[0,0] + s[1,1])
+                        R_neg_theta = [ [ np.cos(theta) , np.sin(theta)] , [ -np.sin(theta) , np.cos(theta)] ]
+                        # mag_s_tilda = np.sqrt( np.power(s[0,0],2) + np.power(s[0,1],2) )
+                        mag_s_tilda = np.sqrt( s_tilda[0,0]**2 + s_tilda[0,1]**2 )
+                        #Division by zero check 
+                        if np.linalg.det(s) < 1e-10 or mag_s_tilda < 1e-10:
+                            continue
+                        q = 1/mag_s_tilda * (np.arcsinh( mag_s_tilda / np.sqrt(np.linalg.det(s)) )) * np.dot(s_tilda , R_neg_theta)
+                        q_array.append(q)
+                        area = np.linalg.det(s)
+                        # print(area)
+                        area_array.append(area)
+
+                    # print(q_array)
+                    q_area_sum = [ np.array(q_array[i])*area_array[i] for i in range(len(q_array)) ]
+                    Q = np.sum(q_area_sum , axis =0) / np.sum(area_array) #check
+                    # print(area_array)
+                    mag_Q = np.sqrt( np.power( Q[0,0], 2) + np.power( Q[0,1], 2) )
+                    Q_s_array = [ np.sqrt( np.power( q_array[i][0,0], 2) + np.power( q_array[i][0,1], 2) ) for i in range(len(q_array)) ]
+                    qs_area_sum = [np.array(Q_s_array[i]) * area_array[i] for i in range(len(Q_s_array))] # Is it weighted average?
+                    mag_Q_s = np.sum(qs_area_sum , axis =0) / np.sum(area_array) #check
+                    Q_alignment = mag_Q/mag_Q_s
+                    print( 'Q: '  , mag_Q )
+                    print( 'Q_s: ', mag_Q_s)
+                    print( 'Q_a: ', mag_Q/mag_Q_s)
+                    return Q_alignment
 
 
-for filename in Files:
-    with celldiv.TrajHandle(filename) as th:
-        frameCount = 0
-        f_count=0
-        try:
-            for i in range(int(th.maxFrames/nSkip)+1): # i for each frame written to file
-                frameCount += 1
-
-                if frameCount > args.num_frames:
-                    break
-                
-                f=th.ReadFrame(inc=nSkip ) # f is the list of all the cells in the frame
-                f_count+= len(f)
-                m = np.vstack(th.cellInd)
-                f = [ f[i][:180] for i in range(len(m)) ]
-
-                if len(args.inds) > 0:
-                    pass
-                
-                if  i >0 :
-                    Cell_shape_alignment(f , th) 
-
-        except celldiv.IncompleteTrajectoryError:
-            print ("Stopping...") 
+            except celldiv.IncompleteTrajectoryError:
+                print ("Stopping...") 
