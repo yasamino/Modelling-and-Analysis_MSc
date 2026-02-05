@@ -342,6 +342,115 @@ def Animate_cell_elongation(view = 'XY', size_z = 28, frame_rate = 5 , z_contact
             print("The view is: {}".format(view))
 
 
+def Animate_layers_elongation(): #interactive - change the parameters
+    start_from = 0
+    end = 0
+    
+    Z = float(input("Size of the box - Z axis : \n"))
+    layers = int(input("Number of layers : \n"))
+    size = int(input("Size of the box - X and Y : \n"))
+    view = input("view : \n")
+
+    def soft_hard_animation(f,th,frame_number , Filename , size , ax , view = 'XY' , z = 1.9):
+        m = np.vstack(th.cellInd)
+        c = [ f[i][:180] for i in range(len(m)) ]
+        Elongation_mag = []
+        index_of_elongated_cells = []
+        #Elong
+        
+        for index , cell in enumerate(c):
+
+            COM_Z = np.mean(cell[:,2], axis=0) 
+            
+            hull = ConvexHull(cell[:,0:2])
+            Area = hull.volume
+            p = cell[hull.vertices,0:2]
+            COM = np.mean(p, axis=0)# # The center of mass is calculated using ONLY the outer point of the cell
+            centered_p = p - COM
+            '''D_alpha = 1/A * sum( Cos(2theta) dA )'''
+            '''B_alpha = 1/A * sum( Sin(2theta) dA )'''
+            D_alpha = np.float64(0)
+            B_alpha = np.float64(0)
+            Theta = np.arctan2(centered_p[:,1], centered_p[:,0])
+            for i in range(len(Theta)):
+                d_A = 0.5 * np.abs(centered_p[i-1][0] * centered_p[i][1] - centered_p[i][0] * centered_p[i-1][1])
+                D_alpha += np.cos(2*Theta[i]) * d_A
+                B_alpha += np.sin(2*Theta[i]) * d_A
+            D_alpha = D_alpha/Area
+            B_alpha = B_alpha/Area
+            Magnitude_of_elongation = np.linalg.norm([[D_alpha, B_alpha], [B_alpha, -D_alpha]]) # Norm of the matrix is the magnitude of elongation
+            Elongation_mag.append(Magnitude_of_elongation)
+            Mag_limit = 0.5
+            
+            if view == 'XY':
+                pass
+            elif view == 'YZ':
+                hull = ConvexHull(cell[:,1:3])
+                p = cell[hull.vertices,1:3]
+
+            patches = []
+            patches.append(Polygon(p, closed=True))
+            p = PatchCollection(patches,edgecolor="r",alpha=0.8)
+            p.set_color(cpick.to_rgba(Magnitude_of_elongation))
+            for k in range(layers):
+                if COM_Z < z*(k+1)/layers:
+                    ax[k].add_collection(p)
+                    break
+
+        if view == 'XY':
+            for i in range(layers):
+                ax[i].set_xlim([0,size])
+                ax[i].set_ylim([0,size])
+        elif view == 'YZ':
+            for i in range(layers):
+                ax[i].set_xlim([0,size])
+                ax[i].set_ylim([0,z])
+            
+        fig.suptitle("Cell Elongation, Time = {}".format(frame_number*1000))
+        print('frame_number',frame_number)
+        return [ax[i].plot() for i in range(layers)]
+    
+    def update(frame_number):
+        for i in range(layers):
+            ax[i].clear()
+        frame = th.ReadFrame(inc=nSkip)
+        return soft_hard_animation(frame, th, frame_number , filename, size, ax , view , Z) 
+
+    for filename in Files:
+        with celldiv.TrajHandle(filename) as th:
+            if view == 'XY':
+                fig, ax = plt.subplots(1, layers ,  figsize=(5*(layers)+2, 5)) ## only change the xy perspective for now
+            elif view == 'YZ':
+                fig, ax = plt.subplots(figsize=(size//5,Z//5)) 
+
+            for i in range(layers):
+                ax[i].set_xlabel('X')
+                ax[i].set_ylabel('Y')
+                ax[i].set_aspect('equal', adjustable='box')
+            cm1 = mcol.LinearSegmentedColormap.from_list("MyCmapName",['#2A9B2A','r'])
+            cnorm = mcol.Normalize(vmin=0,vmax=1)
+            cpick = cm.ScalarMappable(norm=cnorm,cmap=cm1)
+            cpick.set_array([])
+            
+            #create an animation
+            for _ in range(start_from):
+                th.ReadFrame(inc=nSkip)
+
+            ani = animation.FuncAnimation(fig=fig , func=update, frames=range(start_from,th.maxFrames-end,nSkip), interval=50, repeat=False)
+            cbar_ax = fig.add_axes([0.93, 0.1, 0.01, 0.8])
+            cbar = plt.colorbar(cpick, cax=cbar_ax)
+            #cbar = plt.colorbar(cpick, ax=ax[layers-1] , pad =0.1)
+            cbar.set_label("$\\Upsilon$", labelpad=10)  # Main label (on the side)
+            cbar.ax.set_title('elongated', pad=10, fontsize=12)  # Label above the color bar
+            cbar.ax.set_xlabel('Spherical', labelpad=10 , fontsize=12)  # Label below the color bar
+            # plt.show()
+            # save animation as gif
+            if view == 'XY':
+                ani.save('elong_colormap_{}.gif'.format(filename[:-4]), writer='Pillow', fps=5)
+            elif view == 'YZ':
+                ani.save('elong_colormap_YZ_{}.gif'.format(filename[:-4]), writer='Pillow', fps=5)
+
+
 def Animate_vector_field_elongation_vector(size_z = 28, frame_rate = 5, differenciate_soft_hard = False):
     start_from =0
     end = 0
@@ -495,6 +604,102 @@ def Animate_vector_field_elongation_vector(size_z = 28, frame_rate = 5, differen
             #save animation as gif
             if view == 'XY':
                 ani.save('elong_colorma_XY_{}.gif'.format(filename[:-4]), writer='Pillow', fps=frame_rate)
+
+
+def Elongation2(f,frame_number , j , Filename, Plot_distribution = False ,Plot_elongated_cells = False , color_elongated_cells=False , size = 100 , bin_n=50 ): #FIX
+    m = np.vstack(th.cellInd)
+    c = [ f[i][:180] for i in range(len(m)) ]
+    Elongation_mag = []
+
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    index_of_elongated_cells = []
+    ## color elongation
+    cm1 = mcol.LinearSegmentedColormap.from_list("MyCmapName",["r","b"])
+    cnorm = mcol.Normalize(vmin=0,vmax=1)
+    cpick = cm.ScalarMappable(norm=cnorm,cmap=cm1)
+    cpick.set_array([])
+    #
+    for index , cell in enumerate(c):
+        hull = ConvexHull(cell[:,0:2])
+        Area = hull.volume
+        p = cell[hull.vertices,0:2]
+        COM = np.mean(p, axis=0)
+        centered_p = p - COM
+        '''D_alpha = 1/A * sum( Cos(2theta) dA )'''
+        '''B_alpha = 1/A * sum( Sin(2theta) dA )'''
+        D_alpha = np.float64(0)
+        B_alpha = np.float64(0)
+        Theta = np.arctan2(centered_p[:,1], centered_p[:,0])
+        for i in range(len(Theta)):
+            d_A = 0.5 * np.abs(centered_p[i-1][0] * centered_p[i][1] - centered_p[i][0] * centered_p[i-1][1])
+            D_alpha += np.cos(2*Theta[i]) * d_A
+            B_alpha += np.sin(2*Theta[i]) * d_A
+        D_alpha = D_alpha/Area
+        B_alpha = B_alpha/Area
+
+        Magnitude_of_elongation = np.linalg.norm([[D_alpha, B_alpha], [B_alpha, -D_alpha]]) # Norm of the matrix is the magnitude of elongation
+        Elongation_mag.append(Magnitude_of_elongation)
+
+        # if index == 3677:
+        #     print('Elong for cell 3677',Magnitude_of_elongation)
+
+            
+        Mag_limit = 0.5
+        
+        if Plot_elongated_cells:
+            patches = []
+            patches.append(Polygon(p, closed=True))
+            if Magnitude_of_elongation > Mag_limit:
+                p = PatchCollection(patches, color= (1, 128/255, 0 ) ,alpha=0.8)
+                ax.add_collection(p)
+                index_of_elongated_cells.append(index)
+            elif m[index] < 0:
+                p = PatchCollection(patches, color= (0.2, 0.6, 1) ,edgecolor="b",alpha=0.8)
+                ax.add_collection(p)  
+            elif m[index] >=0:
+                p = PatchCollection(patches, color= (222/255, 28/255, 0 ) ,alpha=0.8)
+                ax.add_collection(p)
+
+
+        if color_elongated_cells:
+            patches = []
+            hull = ConvexHull(cell[:,0:2])
+            p = cell[hull.vertices,0:2]
+            patches.append(Polygon(p, closed=True))
+            p = PatchCollection(patches,edgecolor="r",alpha=0.8)
+            # for simplex in hull.simplices:
+            #     plt.plot(f[mi*192:mi*192 + 180][simplex, 0], f[mi*192:mi*192 + 180][simplex, 1], 'k-')
+            p.set_color(cpick.to_rgba(Magnitude_of_elongation))
+            ax.add_collection(p)
+
+
+    # Find the values in array Elongation_mag larger than mag_limit
+    Elong_mag_over_limit = [ x for x in Elongation_mag if x > Mag_limit]
+    Elongation_mag = np.array(Elongation_mag)
+    
+
+    #print(Elong_mag_over_limit)
+
+    if color_elongated_cells:
+        ax.set_xlim([0,size])
+        ax.set_ylim([0,size])
+        plt.colorbar(cpick,label="Area",ax=plt.gca())
+        plt.savefig("Elong_colormap_{}_{}.png".format(Filename[:-4], frame_number))
+
+    if Plot_elongated_cells:
+        ax.set_xlim([0,size])
+        ax.set_ylim([0,size])
+        plt.title("Cells with $\\Upsilon > ${}, Time = {}".format(Mag_limit, (frame_number-2)*10000))
+        plt.savefig("Elongation_{}_{}.png".format(Filename[:-4], frame_number))
+        plt.clf()
+
+    if Plot_distribution:
+        plot_distribution_of_elongation(Elongation_mag, bin_n , j , Filename)
+
+
 
 Elongation()
 

@@ -140,3 +140,30 @@ def Cell_shape_alignment(f ,th):
 
             except celldiv.IncompleteTrajectoryError:
                 print ("Stopping...") 
+
+
+def write_P_Q_toFile(file_name , size , frame_number , f , th):
+
+    Json_file = 'P_Q_{}.json'.format(file_name[:-4])
+    Q = Cell_shape_alignment(f,th)
+    p_soft, p_hard , p_all = Cell_Shape_Parameter(f , frame_number , file_name , size , plot_system = False , Plot_distribution = False , bin_n=50)
+    if os.path.isfile(Json_file):
+        with open(Json_file) as file:
+            data = json.load(file)
+        data['Q'].append(Q)
+        data['p_Hard'].append(p_hard)
+        data['p_Soft'].append(p_soft)
+        data['p_All'].append(p_all)
+        data['Time'].append(time)
+        with open(Json_file, 'w') as file:
+            json.dump(data, file)
+    else:
+        data = {
+            'Q': [Q],
+            'p_Soft': [p_soft],
+            'p_Hard': [p_hard],
+            'p_All': [p_all],
+            'Time': [time]
+        }
+        with open(Json_file, 'w') as file:
+            json.dump(data, file)
