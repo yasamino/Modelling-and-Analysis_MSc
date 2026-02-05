@@ -24,3 +24,25 @@ The goal of this work is to **model, simulate, and analyze the behavior of livin
 ├── results/ # Figures and outputs\\
 ├── videos/ # Simulation videos\\
 └── README.md
+
+---
+
+## Simulation Videos
+
+The `videos/` directory contains visualisations illustrating the formation and stability of living capillary bridges under different initial conditions.
+
+### Large, stable capillary bridge (R = 100)
+
+- **Side view:** [R100_Sideview.mp4](videos/R100_Sideview.mp4)  
+- **Top view:** [R100_Topview.mp4](videos/R100_Topview.mp4)  
+
+These simulations show a large, stable capillary bridge maintaining structural integrity over time.
+
+---
+
+### Small, unstable capillary bridge (R = 70)
+
+- **Side view:** [R70_Sideview.mp4](videos/R70_Sideview.mp4)  
+- **Top view:** [R70_Topview.mp4](videos/R70_Topview.mp4)  
+
+These simulations demonstrate an unstable capillary bridge undergoing deformation and eventual loss of stability.
