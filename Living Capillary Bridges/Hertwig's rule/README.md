@@ -45,6 +45,10 @@ This folder contains simulations and analysis comparing the effect of cell divis
 
 <img src="videos/random_gyration_XY.gif" alt="random_gyration_XY" width="600">
 
+*Side view (YZ)*
+
+<img src="videos/random_gyration_YZ.gif" alt="random_gyration_YZ" width="600">
+
 ### Cell Shape Elongation Analysis
 
 <img src="videos/elong_XY_growth_and_Division_surface_long_axis_4.gif" alt="Vector field visualization of elongation" width="600">
