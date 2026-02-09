@@ -12,19 +12,19 @@ Tytti Kärki, Senna Luntama, Yasamin Modabber, Saila Pönkä, Gonca Erdemci-Tand
 
 This repository contains the code, data, and analysis scripts used in the master's project supporting the paper *Living Capillary Bridges*.  
 
-The goal of this work is to **model, simulate, and analyze the behavior of living capillary bridges** using computational methods. We use [CellSim3D](https://github.com/SoftSimu/CellSim3D), a coarse-grained software and model to simulate large-scale cellular systems in three dimensions. The scripts implement key parts of the analysis and visualization workflows.
+The goal of this work is to **model, simulate, and analyze the behavior of living capillary bridges** using computational methods. We use [CellSim3D](https://github.com/SoftSimu/CellSim3D), a coarse-grained software and model to simulate cellular systems in three dimensions. The scripts implement key parts of the analysis and visualizations.
 
 ---
 
 ## Folder Structure
-
-├── data/ # Data files\\
-├── scripts/ # Python scripts\\
-├── src/ # Source code\\
-├── results/ # Figures and outputs\\
-├── videos/ # Simulation videos\\
+```
+├── data/ # Data files
+├── scripts/ # Python scripts
+├── src/ # Source code
+├── results/ # Figures and outputs
+├── videos/ # Simulation videos
 └── README.md
-
+```
 ---
 
 ## Simulation Videos
