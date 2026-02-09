@@ -22,6 +22,7 @@ This folder contains simulations and analysis comparing the effect of cell divis
 
 <video src="videos/animated_polar_division.mp4" controls width="600"></video>
 
+
 *Blender render showing division dynamics*
 
 ### Gyration Tensor Analysis
@@ -30,11 +31,11 @@ This folder contains simulations and analysis comparing the effect of cell divis
 
 *Top view (XY)*
 
-<video src="elong_gyration_XY.mp4" controls width="600"></video>
+<img src="videos/elong_gyration_XY.gif" alt="elong_gyration_XY" width="600">
 
 *Side view (YZ)*
 
-<video src="elong_gyration_YZ.mp4" controls width="600"></video>
+<img src="videos/elong_gyration_YZ.gif" alt="elong_gyration_YZ" width="600">
 
 *show the Gyration tensor analysis of elongation patterns*
 
@@ -42,7 +43,7 @@ This folder contains simulations and analysis comparing the effect of cell divis
 
 *Top view (XY)*
 
-<video src="random_gyration_XY.mp4" controls width="600"></video>
+<img src="videos/random_gyration_XY.gif" alt="random_gyration_XY" width="600">
 
 ### Cell Shape Elongation Analysis
 
