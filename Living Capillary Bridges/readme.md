@@ -18,11 +18,11 @@ The goal of this work is to **model, simulate, and analyze the behavior of livin
 
 ## Folder Structure
 ```
-├── data/ # Data files
-├── scripts/ # Python scripts
-├── src/ # Source code
-├── results/ # Figures and outputs
+├── data/ # data files
 ├── videos/ # Simulation videos
+├── Hertwig's rule/ # Scripts, videos, and discussion regarding the division rules
+├── Population analysis/ # Analysis scripts
+├── Stochasticity
 └── README.md
 ```
 ---
