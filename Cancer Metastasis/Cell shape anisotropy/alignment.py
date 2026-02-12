@@ -26,7 +26,9 @@ import matplotlib.animation as animation
 import celldiv # type: ignore
 from scipy.fft import ifft2
 from scipy.fft import fft2
-from builtins import range, str, int, len, enumerate, min, max, print
+from builtins import range, str, int, len, enumerate, min, max, print, open
+sys.path.append('../Cell_Shape_Index')
+from shape_index import Cell_Shape_Parameter # type: ignore
 
 
 Files = ['J28_2types_4clusters_set3.xyz']
@@ -147,6 +149,7 @@ def write_P_Q_toFile(file_name , size , frame_number , f , th):
     Json_file = 'P_Q_{}.json'.format(file_name[:-4])
     Q = Cell_shape_alignment(f,th)
     p_soft, p_hard , p_all = Cell_Shape_Parameter(f , frame_number , file_name , size , plot_system = False , Plot_distribution = False , bin_n=50)
+    time = 0 #what was it supposed to be? frame_number*1000?
     if os.path.isfile(Json_file):
         with open(Json_file) as file:
             data = json.load(file)
